@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gölge Koç</title>
+<meta name="description" content="Kamerayla izleyen, sesli kombinasyon söyleyen kickboks antrenörü">
+<meta name="theme-color" content="#111214">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gölge Koç">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #111214; --panel: #1b1d21; --line: #2c2f35; --text: #f1f1ef; --muted: #9a9ca3;
+    --accent: #e8452c; --ok: #3fb950; --warn: #e3b341; --bad: #f05d4d;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+  body { overflow: hidden; }
+  button { font: inherit; color: inherit; }
+
+  #stage { position: fixed; inset: 0; background: #000; }
+  #stage video, #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); }
+
+  .hud { position: fixed; left: 0; right: 0; pointer-events: none; padding: 0 16px; }
+  #top { top: 0; padding-top: max(12px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; font-variant-numeric: tabular-nums; }
+  #timer { font-size: 22px; font-weight: 700; }
+  #fps { color: var(--muted); font-size: 12px; }
+  #cmd { top: 22%; text-align: center; font-size: clamp(28px, 9vw, 56px); font-weight: 800; letter-spacing: .01em;
+    text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  #result { bottom: calc(96px + env(safe-area-inset-bottom)); text-align: center; font-size: 18px; font-weight: 600; text-shadow: 0 1px 8px rgba(0,0,0,.9); }
+  #result .ok { color: var(--ok); } #result .bad { color: var(--bad); } #result .warn { color: var(--warn); }
+  #banner { top: 50%; transform: translateY(-50%); text-align: center; }
+  #banner span { display: inline-block; background: rgba(0,0,0,.7); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+  #banner:empty { display: none; }
+  #stop { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom)); pointer-events: auto;
+    background: rgba(0,0,0,.6); border: 1px solid var(--line); border-radius: 999px; padding: 12px 28px; font-weight: 700; }
+
+  .screen { position: fixed; inset: 0; overflow-y: auto; background: var(--bg); padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 30px; margin: 8px 0 4px; letter-spacing: -.01em; }
+  h1 b { color: var(--accent); }
+  h2 { font-size: 17px; margin: 24px 0 10px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .field { margin-bottom: 18px; }
+  .field > label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .seg { display: flex; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 3px; }
+  .seg button { flex: 1; border: 0; background: transparent; padding: 10px 4px; border-radius: 9px; font-weight: 600; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .primary { width: 100%; border: 0; border-radius: 14px; padding: 16px; font-size: 18px; font-weight: 800; background: var(--accent); color: #fff; margin-top: 8px; }
+  .secondary { width: 100%; border: 1px solid var(--line); border-radius: 14px; padding: 13px; font-weight: 600; background: transparent; margin-top: 10px; }
+  .tips { color: var(--muted); font-size: 14px; padding-left: 18px; margin: 18px 0 0; }
+  .tips li { margin-bottom: 6px; }
+  .err { color: var(--bad); font-weight: 600; margin-top: 12px; white-space: pre-line; }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .card .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .card .v { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .card .d { font-size: 13px; color: var(--muted); }
+  .advice { padding-left: 20px; margin: 0; } .advice li { margin-bottom: 10px; }
+  .good { color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  td { padding: 7px 0; border-bottom: 1px solid var(--line); } td:last-child { text-align: right; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="stage" hidden>
+  <video id="video" playsinline muted autoplay></video>
+  <canvas id="canvas"></canvas>
+  <div class="hud" id="top"><span id="timer"></span><span id="fps"></span></div>
+  <div class="hud" id="cmd"></div>
+  <div class="hud" id="banner"></div>
+  <div class="hud" id="result"></div>
+  <button id="stop">Bitir</button>
+</div>
+
+<section class="screen" id="menu">
+  <div class="wrap">
+    <h1>Gölge <b>Koç</b></h1>
+    <p class="sub">Kombinasyonu söylerim, kamerayla izlerim, sonunda ne düzelteceğini söylerim.</p>
+
+    <div class="field"><label>Duruş</label>
+      <div class="seg" data-key="stance">
+        <button data-v="orthodox">Ortodoks (sol önde)</button><button data-v="southpaw">Solak (sağ önde)</button>
+      </div></div>
+    <div class="field"><label>Seviye</label>
+      <div class="seg" data-key="level">
+        <button data-v="1">Başlangıç</button><button data-v="2">Orta</button><button data-v="3">İleri</button>
+      </div></div>
+    <div class="field"><label>Süre</label>
+      <div class="seg" data-key="minutes">
+        <button data-v="1">1 dk</button><button data-v="2">2 dk</button><button data-v="3">3 dk</button><button data-v="5">5 dk</button>
+      </div></div>
+
+    <button class="primary" id="go">Başla</button>
+    <button class="secondary" id="testBtn">Algılama testi (serbest vur, ne gördüğümü yazayım)</button>
+    <div class="err" id="err"></div>
+
+    <ul class="tips">
+      <li>Telefonu yere ya da rafa yasla, 2–3 metre uzaklaş. Başından ayağına kadar ekranda olmalısın.</li>
+      <li>Kameraya tam karşıdan değil, hafif çapraz dur. Düz yumrukları böyle daha iyi görürüm.</li>
+      <li>Işık önden gelsin, arkanda pencere olmasın. Bol kıyafet ölçümü bozar.</li>
+      <li>iPhone'da sessiz modu kapat, yoksa komutları duymazsın.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="screen" id="summary" hidden>
+  <div class="wrap">
+    <h1>Antrenman <b>özeti</b></h1>
+    <p class="sub" id="sumSub"></p>
+    <div class="cards" id="cards"></div>
+    <h2>Düzeltmen gerekenler</h2>
+    <ol class="advice" id="advice"></ol>
+    <div id="strengths"></div>
+    <h2>Hareket bazında</h2>
+    <table id="byMove"></table>
+    <button class="primary" id="again">Tekrar</button>
+    <button class="secondary" id="home">Ana ekran</button>
+  </div>
+</section>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
