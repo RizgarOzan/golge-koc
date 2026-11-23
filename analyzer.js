@@ -28,6 +28,16 @@ export const CFG = {
   guardH: 0.75,         // wrist height at or above this = hand is up
   punchMinH: 0.6,       // a punch peaks near shoulder height; a wrist that ends lower is just a dropped hand
   overlapKeep: 0.6,     // overlapping weaker events below this share of the winner are dropped
+  // Defence. Head moves are measured against the resting stance, in units of the resting torso length.
+  duck: 0.35,           // head drops this far (nose height above the ankles) = duck
+  slip: 0.25,           // head moves this far sideways from above the hips = slip
+  defEnd: 0.6,          // a duck/slip ends when it is back under this share of its start threshold
+  block: -0.05,         // both wrists at least this high relative to the nose (torso units) = cover/block
+  waistBend: 0.8,       // radians of extra forward lean in a duck: bending at the waist instead of the knees.
+                        // Correct knee ducks in a coaching video leaned 0.46-0.75, so the line sits above that.
+  defKeepMag: 2,        // a defence that overlaps a strike survives only if the head went this many thresholds far
+  defArmMax: 1.0,       // ...and no overlapping arm event was at least this strong (1 = a typical punch)
+  telegraph: 0.15,      // the punching hand first went this far backward (torso units) before going out
 };
 
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -57,15 +67,24 @@ export function frameFeatures(world) {
       LA: rel(LM.lAn), RA: rel(LM.rAn), LK: rel(LM.lKn), RK: rel(LM.rKn),
     },
     h: {
-      lWr: h(LM.lWr), rWr: h(LM.rWr), lEl: h(LM.lEl), rEl: h(LM.rEl),
+      nose: h(LM.nose), lWr: h(LM.lWr), rWr: h(LM.rWr), lEl: h(LM.lEl), rEl: h(LM.rEl),
       lSh: h(LM.lSh), rSh: h(LM.rSh), lKn: h(LM.lKn), rKn: h(LM.rKn), lAn: h(LM.lAn), rAn: h(LM.rAn),
     },
     armS: { L: straight(LM.lSh, LM.lEl, LM.lWr), R: straight(LM.rSh, LM.rEl, LM.rWr) },
     legS: { L: straight(LM.lHip, LM.lKn, LM.lAn), R: straight(LM.rHip, LM.rKn, LM.rAn) },
+    // Head in the camera's frame (y points down), in metres, for defence moves.
+    // Heights along the torso axis don't work here: the torso itself tilts in a duck.
+    T,
+    head: {
+      h: Math.max(p(LM.lAn)[1], p(LM.rAn)[1]) - p(LM.nose)[1], // from the standing (lower) foot: a kick lifts the other
+      x: p(LM.nose)[0] - hip[0], z: p(LM.nose)[2] - hip[2],
+      tilt: Math.acos(Math.max(-1, Math.min(1, -up[1]))),
+    },
   };
 }
 
 export const guardUp = (f, side) => (side === 'L' ? f.h.lWr : f.h.rWr) >= CFG.guardH;
+const covering = (f, side) => (side === 'L' ? f.h.lWr : f.h.rWr) - f.h.nose >= CFG.block;
 
 function classifyArm(side, f) {
   const s = f.armS[side];
@@ -97,6 +116,8 @@ export function createDetector() {
   const open = {};         // limb -> event in progress
   const pending = [];      // closed events waiting for overlap resolution
   let restFrames = 0;
+  let strikes = [];        // recent finished strikes, to tell defence from head movement caused by a strike
+  const hist = [];         // raw wrist positions of the last moments, to see what a hand did right before a punch
 
   const limbs = [
     { id: 'L', kind: 'arm', keys: ['L'] },
@@ -113,10 +134,12 @@ export function createDetector() {
       smooth = structuredClone(f.pos);
       rest = structuredClone(f.pos);
       lastT = t;
-      return { frame: f, events: out, still: true };
+      return { frame: f, events: out, defs: [], still: true };
     }
     const dt = Math.max(1e-3, t - lastT);
     lastT = t;
+    hist.push({ t, L: f.pos.L, R: f.pos.R });
+    while (hist[0].t < t - 0.4) hist.shift();
     let maxSpeed = 0;
     for (const k in f.pos) {
       const next = add(mul(smooth[k], 1 - CFG.smooth), mul(f.pos[k], CFG.smooth));
@@ -132,6 +155,7 @@ export function createDetector() {
       rest[k] = add(mul(rest[k], 1 - a), mul(smooth[k], a));
     }
     if (still) restFrames++;
+    defence(t, f, still);
 
     for (const limb of limbs) {
       const key = limbKey(limb);
@@ -143,7 +167,10 @@ export function createDetector() {
       const ev = open[key];
       if (!ev) {
         const start = d > (limb.kind === 'arm' ? CFG.armStart : CFG.legStart);
-        if (start) open[key] = { limb: limb.id, kind: limb.kind, start: t, peak: d, peakFrame: f, frames: [f] };
+        if (start) open[key] = {
+          limb: limb.id, kind: limb.kind, start: t, peak: d, peakFrame: f, frames: [f],
+          rest: rest[limb.id], pre: limb.kind === 'arm' ? hist.filter((h) => h.t >= t - 0.35).map((h) => h[limb.id]) : [],
+        };
         continue;
       }
       ev.frames.push(f);
@@ -153,7 +180,7 @@ export function createDetector() {
         ev.end = t;
         delete open[key];
         const done = finish(ev);
-        if (done) pending.push(done);
+        if (done) { pending.push(done); strikes.push(done); }
       }
     }
 
@@ -165,7 +192,50 @@ export function createDetector() {
       }
       out.push(...resolve(group));
     }
-    return { frame: f, events: out, still };
+    // Punching and kicking move the head too. A defence is only reported once no strike is open.
+    // A slip or duck also shakes the arms and legs a little, so an overlapping strike only cancels
+    // the defence when the head move was small, an arm went out hard, or a kick left the ground.
+    const defs = [];
+    if (!Object.keys(open).length) {
+      for (const d of defPending.splice(0)) {
+        const over = strikes.filter((e) => e.start < d.end + 0.15 && e.end > d.start - 0.15);
+        const real = over.some((e) => (e.kind === 'arm' && e.strength >= CFG.defArmMax) || (e.kind === 'leg' && e.type !== 'low'));
+        if (!over.length || (d.mag >= CFG.defKeepMag && !real)) defs.push(d);
+      }
+      strikes = strikes.filter((e) => e.end > t - 2);
+    }
+    return { frame: f, events: out, defs, still };
+  }
+
+  // Defence: duck (head drops), slip (head moves off the hips), block (both hands up to the forehead).
+  // Head moves are compared with the resting stance, which follows the fighter like the arm rest spots do.
+  let headRest = null;
+  let def = null;
+  const defPending = [];
+  function defence(t, f, still) {
+    const hd = f.head;
+    if (!headRest) { headRest = { ...hd, T: f.T }; return; }
+    const a = def ? 0 : still ? (restFrames < 15 ? 0.3 : 0.05) : CFG.restFollow;
+    for (const k of ['h', 'x', 'z', 'tilt', 'T']) headRest[k] += ((k === 'T' ? f.T : hd[k]) - headRest[k]) * a;
+    const drop = (headRest.h - hd.h) / headRest.T;
+    const shift = Math.hypot(hd.x - headRest.x, hd.z - headRest.z) / headRest.T;
+    const cover = covering(f, 'L') && covering(f, 'R');
+    const type = drop > CFG.duck ? 'duck' : shift > CFG.slip ? 'slip' : cover ? 'block' : null;
+    if (!def) {
+      if (type) def = { kind: 'def', type, start: t, waistBend: false, mag: 0 };
+      return;
+    }
+    // How far past its threshold the head went, so a big defence can win over a small arm twitch.
+    def.mag = Math.max(def.mag, drop / CFG.duck, shift / CFG.slip);
+    // Once a move started, the strongest one seen wins: a block that turns into a duck is a duck.
+    const rank = { block: 1, slip: 2, duck: 3 };
+    if (type && rank[type] > rank[def.type]) def.type = type;
+    if (def.type === 'duck' && hd.tilt - headRest.tilt > CFG.waistBend) def.waistBend = true;
+    const over = def.type === 'duck' ? drop > CFG.duck * CFG.defEnd
+      : def.type === 'slip' ? shift > CFG.slip * CFG.defEnd : cover;
+    if (over && t - def.start <= CFG.maxEvent) return;
+    defPending.push({ ...def, end: t });
+    def = null;
   }
 
   return { update, get rest() { return rest; } };
@@ -174,14 +244,24 @@ export function createDetector() {
 function finish(ev) {
   const f = ev.peakFrame;
   if (ev.kind === 'arm' && (ev.limb === 'L' ? f.h.lWr : f.h.rWr) < CFG.punchMinH) return null;
+  // A bent arm whose hand ends at the forehead is covering up, not punching.
+  if (ev.kind === 'arm' && covering(f, ev.limb) && f.armS[ev.limb] < CFG.straight) return null;
   const c =ev.kind === 'arm' ? classifyArm(ev.limb, f) : classifyLeg(ev.limb, f);
   // Guard during the strike: the other hand for punches, the hand opposite the kicking leg for kicks.
   const watch = ev.limb === 'L' ? 'R' : 'L';
   const upShare = ev.frames.filter((fr) => guardUp(fr, watch)).length / ev.frames.length;
   const typical = ev.kind === 'arm' ? 0.8 : 1.0;
+  // Telegraph: how far the hand went backward, against the punch's own direction, just before it went out.
+  // On a few coaching videos, telegraphed punches went past the line about twice as often as clean ones (29-40% vs 11-17%).
+  let telegraph = 0;
+  if (ev.kind === 'arm') {
+    const out = sub(f.pos[ev.limb], ev.rest);
+    const u = mul(out, 1 / (len(out) || 1));
+    for (const p of ev.pre) telegraph = Math.max(telegraph, -dot(sub(p, ev.rest), u));
+  }
   return {
     limb: ev.limb, kind: ev.kind, type: c.type, start: ev.start, end: ev.end,
-    strength: ev.peak / typical, otherHandUp: upShare, detail: c,
+    strength: ev.peak / typical, otherHandUp: upShare, telegraph, detail: c,
   };
 }
 
@@ -276,6 +356,63 @@ export function scoreCombo(combo, events, stance, cmdStart, afterFrames) {
   return res;
 }
 
+// ---------- fight mode: the coach attacks, you defend ----------
+
+// What the imaginary opponent throws and which defences answer it. 'check' = lifting the leg against a low kick.
+export const ATTACKS = {
+  jab:   { show: 'Jab geliyor', say: 'cab', ok: ['slip', 'block'] },
+  cross: { show: 'Kros geliyor', say: 'kros', ok: ['slip', 'block'] },
+  hook:  { show: 'Kroşe geliyor', say: 'kroşe', ok: ['duck', 'block'] },
+  double:{ show: 'Jab kros geliyor', say: 'cab kros', ok: ['slip', 'block', 'duck'] },
+  low:   { show: 'Low kick geliyor', say: 'lov kik', ok: ['check'] },
+};
+export const DEF_NAME = { slip: 'kayma', duck: 'eğilme', block: 'kapanma', check: 'tekme kontrolü' };
+
+// The first defence after the call is the answer. hitAt is when the punch would land.
+export function scoreDefence(attack, defs, events, callStart, hitAt) {
+  const legs = events.filter((e) => e.kind === 'leg').map((e) => ({ type: 'check', start: e.start, waistBend: false }));
+  const got = [...defs, ...legs].filter((d) => d.start >= callStart).sort((a, b) => a.start - b.start)[0] || null;
+  let verdict;
+  if (!got || got.start > hitAt + 0.6) verdict = 'none';
+  else if (!ATTACKS[attack].ok.includes(got.type)) verdict = 'wrongDef';
+  else if (got.start > hitAt) verdict = 'late';
+  else verdict = 'ok';
+  return { attack, got: verdict === 'none' ? null : got, verdict, reaction: got && verdict !== 'none' ? got.start - callStart : null, waistBend: !!got?.waistBend };
+}
+
+export function summarizeFight(defResults) {
+  const n = defResults.length || 1;
+  const share = (fn) => defResults.filter(fn).length / n;
+  const reactions = defResults.map((r) => r.reaction).filter((x) => x != null);
+  const ducks = defResults.filter((r) => r.got?.type === 'duck');
+  const stats = {
+    attacks: defResults.length,
+    defended: share((r) => r.verdict === 'ok'),
+    late: share((r) => r.verdict === 'late'),
+    none: share((r) => r.verdict === 'none'),
+    wrongDef: share((r) => r.verdict === 'wrongDef'),
+    avgReaction: reactions.length ? reactions.reduce((a, b) => a + b, 0) / reactions.length : null,
+    waistBend: ducks.length ? ducks.filter((r) => r.waistBend).length / ducks.length : 0,
+    byAttack: {},
+  };
+  for (const r of defResults) {
+    const b = (stats.byAttack[r.attack] ??= { tries: 0, ok: 0 });
+    b.tries++;
+    if (r.verdict === 'ok') b.ok++;
+  }
+  const pct = (x) => `%${Math.round(x * 100)}`;
+  const tips = [];
+  if (stats.none > 0.25) tips.push(`Saldırıların ${pct(stats.none)} kadarında hiç savunma görmedim. Komutu duyduğun an baş hareket etsin: kay, eğil ya da kapan.`);
+  if (stats.late > 0.2) tips.push(`Savunman geç kalıyor (${pct(stats.late)}). Vuruşu beklemeden hareket et; omuzların gevşek, dizlerin hafif bükük dursun ki hemen kayabilesin.`);
+  if (stats.wrongDef > 0.2) tips.push(`Yanlış savunma seçiyorsun (${pct(stats.wrongDef)}). Düz yumruğa kay ya da kapan, kroşenin altından eğil, low kick'e dizini kaldırıp kontrol et.`);
+  if (ducks.length >= 2 && stats.waistBend > 0.4) tips.push(`Eğilirken belden kırılıyorsun (${pct(stats.waistBend)}). Sırtın dik kalsın, dizlerinden çömel. Belden eğilince başın rakibin dizine iner.`);
+  if (stats.avgReaction != null && stats.avgReaction > 0.9) tips.push(`Tepki süren ${stats.avgReaction.toFixed(2)} sn. Savaş modunu kısa turlarla sık tekrar et, bu süre düşer.`);
+  const strengths = [];
+  if (stats.defended >= 0.75 && defResults.length >= 5) strengths.push(`Saldırıların ${pct(stats.defended)} kadarını doğru savundun.`);
+  if (stats.avgReaction != null && stats.avgReaction <= 0.6) strengths.push(`Savunma tepkin hızlı (${stats.avgReaction.toFixed(2)} sn).`);
+  return { stats, tips, strengths };
+}
+
 // Turn a whole session into stats and plain-language advice.
 export function summarize(results, idleGuardShare) {
   const all = results.flatMap((r) => r.moves);
@@ -284,6 +421,7 @@ export function summarize(results, idleGuardShare) {
   const reactions = results.map((r) => r.reaction).filter((x) => x != null && x > 0);
   const avgReaction = reactions.length ? reactions.reduce((a, b) => a + b, 0) / reactions.length : null;
   const thrown = all.filter((m) => m.got);
+  const punches = thrown.filter((m) => m.got.kind === 'arm');
   const stats = {
     combos: results.length,
     moves: all.length,
@@ -295,6 +433,7 @@ export function summarize(results, idleGuardShare) {
       ? results.filter((r) => r.moves.some((m) => m.got) && !r.returnedGuard).length / results.filter((r) => r.moves.some((m) => m.got)).length
       : 0,
     idleGuard: idleGuardShare,
+    telegraph: punches.length ? punches.filter((m) => m.got.telegraph > CFG.telegraph).length / punches.length : 0,
     byMove: {},
   };
   for (const m of all) {
@@ -311,6 +450,8 @@ export function summarize(results, idleGuardShare) {
     tips.push({ w: 1 + stats.guardDrop, text: `Vururken boştaki elin düşüyor (${pct(stats.guardDrop)} vuruşta). Yumruk atmayan el yanağına yapışık kalsın, tekmede de karşı el yüzünü korusun.` });
   if (stats.noReturn > 0.3)
     tips.push({ w: 1 + stats.noReturn, text: `Kombinasyondan sonra gardına geç dönüyorsun (${pct(stats.noReturn)}). Her vuruşu attığın yoldan aynı hızla geri çek, son hareketten sonra ellerin hemen yüzüne gelsin.` });
+  if (punches.length >= 10 && stats.telegraph > 0.3)
+    tips.push({ w: 1 + stats.telegraph, text: `Yumruktan önce elini geri çekiyorsun (${pct(stats.telegraph)} yumrukta). Rakip bunu görüp hazırlanır. Yumruk gardın olduğu yerden doğrudan çıksın, önce geriye gitmesin.` });
   if (idleGuardShare != null && idleGuardShare < 0.7)
     tips.push({ w: 1.2 - idleGuardShare, text: `Komut beklerken ellerin aşağıda (zamanın sadece ${pct(idleGuardShare)} kadarında gard yukarıda). Dinlenirken de gard yüzünde dursun.` });
 

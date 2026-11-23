@@ -2,7 +2,7 @@
 // Run: node --test test/analyzer.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createDetector, scoreCombo, summarize, moveName } from '../analyzer.js';
+import { createDetector, scoreCombo, summarize, moveName, scoreDefence, summarizeFight } from '../analyzer.js';
 import { GUARD, PEAK } from './poses.mjs';
 
 let seed = 7;
@@ -22,9 +22,10 @@ function pose(peak, k) {
 function run(strikes, { rest = 1.0, gap = 0.15, stayDown = false } = {}) {
   const det = createDetector();
   const events = [];
+  const defs = [];
   const frames = [];
   let t = 0;
-  const push = (lms) => { const r = det.update(t, lms); events.push(...r.events); frames.push(r.frame); t += 1 / 30; };
+  const push = (lms) => { const r = det.update(t, lms); events.push(...r.events); defs.push(...(r.defs || [])); frames.push(r.frame); t += 1 / 30; };
   for (; t < rest;) push(pose(null, 0));
   for (const s of strikes) {
     const peak = PEAK[s];
@@ -36,7 +37,7 @@ function run(strikes, { rest = 1.0, gap = 0.15, stayDown = false } = {}) {
   }
   const tail = [];
   for (let i = 0; i < 30; i++) { push(pose(stayDown ? PEAK[strikes.at(-1)] : null, stayDown ? 1 : 0)); tail.push(frames.at(-1)); }
-  return { events, tail };
+  return { events, defs, tail };
 }
 
 const label = (e) => `${e.kind}:${e.limb}:${e.type}`;
@@ -99,4 +100,48 @@ test('spoken names', () => {
   assert.equal(moveName('lhook', 'orthodox').show, 'Sol kroşe');
   assert.equal(moveName('lhook', 'southpaw').show, 'Sağ kroşe');
   assert.equal(moveName('rlow', 'orthodox').show, 'Sağ low kick');
+});
+
+test('defence moves are recognised and are not punches', () => {
+  for (const [s, want] of Object.entries({ duck: 'duck', slip: 'slip', block: 'block' })) {
+    const { events, defs } = run([s], { gap: 0.4 });
+    assert.deepEqual(defs.map((d) => d.type), [want], s);
+    assert.equal(events.length, 0, `${s}: ${events.map(label)}`);
+  }
+});
+
+test('ducking from the waist is flagged, a knee duck is not', () => {
+  assert.equal(run(['duck']).defs[0].waistBend, false);
+  const w = run(['duckWaist']).defs;
+  assert.equal(w[0].type, 'duck');
+  assert.equal(w[0].waistBend, true);
+});
+
+test('strikes do not look like defence', () => {
+  for (const s of ['jabL', 'crossR', 'hookL', 'upperR', 'lowR']) assert.equal(run([s]).defs.length, 0, s);
+});
+
+test('fight scoring: right, wrong, late and missing defence', () => {
+  const duck = run(['duck']);
+  const start = duck.defs[0].start;
+  assert.equal(scoreDefence('hook', duck.defs, duck.events, start - 0.4, start + 0.5).verdict, 'ok');
+  assert.equal(scoreDefence('jab', duck.defs, duck.events, start - 0.4, start + 0.5).verdict, 'wrongDef');
+  assert.equal(scoreDefence('hook', duck.defs, duck.events, start - 0.9, start - 0.2).verdict, 'late');
+  assert.equal(scoreDefence('hook', [], [], 1, 2).verdict, 'none');
+  const check = run(['check']);
+  assert.equal(scoreDefence('low', check.defs, check.events, 0.5, 2).verdict, 'ok');
+  const ok = scoreDefence('hook', duck.defs, duck.events, start - 0.4, start + 0.5);
+  const s = summarizeFight([ok, ok, scoreDefence('hook', [], [], 1, 2), scoreDefence('hook', [], [], 1, 2)]);
+  assert.equal(s.stats.defended, 0.5);
+  assert.ok(s.tips.some((t) => t.includes('hiç savunma')), s.tips.join(' | '));
+});
+
+test('pulling the hand back before punching gives a telegraph tip', () => {
+  const punch = (telegraph) => ({ id: 'jab', want: { kind: 'arm', type: 'straight' }, verdict: 'ok', guardDrop: false, got: { kind: 'arm', type: 'straight', telegraph } });
+  const combo = (tel) => ({ moves: [punch(tel), punch(0)], returnedGuard: true, reaction: 0.5 });
+  const bad = summarize(Array.from({ length: 6 }, () => combo(0.3)), 1);
+  assert.equal(bad.stats.telegraph, 0.5);
+  assert.ok(bad.tips.some((t) => t.includes('geri çekiyorsun')));
+  const clean = summarize(Array.from({ length: 6 }, () => combo(0.05)), 1);
+  assert.ok(!clean.tips.some((t) => t.includes('geri çekiyorsun')));
 });
