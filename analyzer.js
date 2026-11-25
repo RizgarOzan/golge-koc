@@ -309,11 +309,12 @@ const SIDE_WORD = { L: 'sol', R: 'sağ' };
 export function sideOf(stance, s) { return (s === 'lead') === (stance === 'orthodox') ? 'L' : 'R'; }
 
 // Display text and a phonetic spelling the Turkish voice reads naturally.
-export function moveName(id, stance) {
+// names 'lr' calls straights by hand ("sol düz", "sağ düz") the way gym coaches do; default says jab/kros.
+export function moveName(id, stance, names) {
   const m = MOVES[id];
   const w = SIDE_WORD[sideOf(stance, m.side)];
   const map = {
-    straight: m.side === 'lead' ? ['Jab', 'cab'] : ['Kros', 'kros'],
+    straight: names === 'lr' ? [`${w} düz`, `${w} düz`] : m.side === 'lead' ? ['Jab', 'cab'] : ['Kros', 'kros'],
     hook: [`${w} kroşe`, `${w} kroşe`],
     upper: [`${w} aparkat`, `${w} aparkat`],
     low: [`${w} low kick`, `${w} lov kik`],
@@ -323,6 +324,22 @@ export function moveName(id, stance) {
   };
   const [show, say] = map[m.type];
   return { show: show[0].toUpperCase() + show.slice(1), say };
+}
+
+// A whole combo as one call. With 'lr' names, back-to-back straights merge: "Sol sağ düz · Sol kroşe".
+export function comboText(combo, stance, names) {
+  const parts = [];
+  for (const id of combo) {
+    const lr = names === 'lr' && MOVES[id].type === 'straight';
+    const side = SIDE_WORD[sideOf(stance, MOVES[id].side)];
+    if (lr && parts.at(-1)?.sides) parts.at(-1).sides.push(side);
+    else parts.push(lr ? { sides: [side] } : moveName(id, stance, names));
+  }
+  const cap = (t) => t[0].toUpperCase() + t.slice(1);
+  return {
+    show: parts.map((p) => (p.sides ? cap(`${p.sides.join(' ')} düz`) : p.show)).join(' · '),
+    say: parts.map((p) => (p.sides ? `${p.sides.join(' ')} düz` : p.say)).join(', '),
+  };
 }
 
 export function eventName(ev) {
@@ -359,13 +376,30 @@ export function scoreCombo(combo, events, stance, cmdStart, afterFrames) {
 // ---------- fight mode: the coach attacks, you defend ----------
 
 // What the imaginary opponent throws and which defences answer it. 'check' = lifting the leg against a low kick.
+// lr is the opponent's own side, called the way a trainer shouts it ("Sağ düz geldi"). The opponent stands orthodox.
 export const ATTACKS = {
-  jab:   { show: 'Jab geliyor', say: 'cab', ok: ['slip', 'block'] },
-  cross: { show: 'Kros geliyor', say: 'kros', ok: ['slip', 'block'] },
-  hook:  { show: 'Kroşe geliyor', say: 'kroşe', ok: ['duck', 'block'] },
-  double:{ show: 'Jab kros geliyor', say: 'cab kros', ok: ['slip', 'block', 'duck'] },
-  low:   { show: 'Low kick geliyor', say: 'lov kik', ok: ['check'] },
+  jab:   { show: 'Jab geliyor', say: 'cab', lr: ['Sol düz', 'sol düz'], ok: ['slip', 'block'] },
+  cross: { show: 'Kros geliyor', say: 'kros', lr: ['Sağ düz', 'sağ düz'], ok: ['slip', 'block'] },
+  hook:  { show: 'Kroşe geliyor', say: 'kroşe', lr: ['Sol kroşe', 'sol kroşe'], ok: ['duck', 'block'] },
+  double:{ show: 'Jab kros geliyor', say: 'cab kros', lr: ['Sol sağ düz', 'sol sağ düz'], ok: ['slip', 'block', 'duck'] },
+  low:   { show: 'Low kick geliyor', say: 'lov kik', lr: ['Sağ low kick', 'sağ lov kik'], ok: ['check'] },
+  llow:  { show: 'Sol low geliyor', say: 'sol lov kik', lr: ['Sol low kick', 'sol lov kik'], ok: ['check'] },
+  mid:   { show: 'Middle kick geliyor', say: 'midıl kik', lr: ['Sağ middle kick', 'sağ midıl kik'], ok: ['block', 'check'] },
+  high:  { show: 'High kick geliyor', say: 'hay kik', lr: ['Sağ high kick', 'sağ hay kik'], ok: ['block', 'duck'] },
 };
+const KICKS = ['low', 'llow', 'mid', 'high'];
+// How one or more attacks are called. Kicks in a row share the last "kick": "Sol low sağ high kick".
+// Spoken lr calls end in "geldi" so an attack never sounds like a combo the user should throw.
+export function attackText(ids, names) {
+  if (names !== 'lr') return { show: ids.map((id) => ATTACKS[id].show.replace(' geliyor', '')).join(' · ') + '!', say: ids.map((id) => ATTACKS[id].say).join(', ') };
+  const show = ids.map((id) => ATTACKS[id].lr[0]), say = ids.map((id) => ATTACKS[id].lr[1]);
+  for (let i = 0; i < ids.length - 1; i++) {
+    if (KICKS.includes(ids[i]) && KICKS.includes(ids[i + 1])) {
+      show[i] = show[i].replace(/ kick$/, ''); say[i] = say[i].replace(/ kik$/, '');
+    }
+  }
+  return { show: show.map((t, i) => (i ? t[0].toLowerCase() + t.slice(1) : t)).join(' ') + '!', say: say.join(' ') + ' geldi' };
+}
 export const DEF_NAME = { slip: 'kayma', duck: 'eğilme', block: 'kapanma', check: 'tekme kontrolü' };
 
 // The first defence after the call is the answer. hitAt is when the punch would land.

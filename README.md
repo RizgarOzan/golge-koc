@@ -7,32 +7,47 @@ Telefonun kamerasıyla seni izleyen, sesli kombinasyon söyleyen ve ne yaptığ�
 - Seviyeye göre (1-3) kombinasyon seçip Türkçe sesle söylüyor: "cab, kros, sağ low kick" gibi.
 - Kamerada iskeletini MediaPipe ile takip ediyor, hangi elle ya da ayakla ne attığını çıkarıyor: düz yumruk, kroşe, aparkat, low/middle/high kick, diz.
 - Her komut için tepki süreni ölçüyor, doğru hareketi doğru taraftan atıp atmadığına bakıyor, vururken boştaki elin düşüyor mu ve kombinasyondan sonra gardına dönüyor musun onu kontrol ediyor.
-- Tur bitince kısa bir özet ve birkaç somut tavsiye veriyor ("Sağ ve solu karıştırıyorsun", "Komut beklerken elin aşağıda" gibi).
+- Raund bitince kısa bir özet ve birkaç somut tavsiye veriyor ("Sağ ve solu karıştırıyorsun", "Komut beklerken elin aşağıda" gibi).
 - Ortodoks ya da solak duruş seçilebiliyor; solakta taraflar kendiliğinden ters çevriliyor.
 - Görüntü telefondan çıkmıyor. Bütün hesap cihazın üzerinde yapılıyor.
 
-## Üç mod
+## Modlar
 
 **Kombinasyon.** Eski usul: kombinasyonu söylüyorum, sen atıyorsun, ben bakıyorum.
 
-**Savaş.** Burada karşında rakip varmış gibi davranıyorum. "Jab geliyor!", "Kroşe geliyor!", "Low kick geliyor!" diye bağırıyorum ve saldırının "gelmesine" seviyeye göre 1,3 / 1,0 / 0,8 saniye kalıyor. O sürede doğru savunmayı yapman lazım:
+**Savunma** (eskiden "Savaş"). Burada karşında rakip varmış gibi davranıyorum. "Jab geliyor!", "Kroşe geliyor!", "Low kick geliyor!" diye bağırıyorum ve saldırının "gelmesine" seviyeye göre 1,3 / 1,0 / 0,8 saniye kalıyor. O sürede doğru savunmayı yapman lazım:
 
 - jab ya da kros gelirse kafanı yana kaydır ya da iki elinle kapan,
 - kroşe gelirse dizlerinden çökerek eğil ya da kapan,
 - jab-kros gelirse bunlardan herhangi biri,
 - low kick gelirse bacağını kaldırıp kontrol et.
 
-Savunma tutarsa hemen kısa bir karşılık kombinasyonu söylüyorum, onu da puanlıyorum. Hiç savunma yapmazsan "Yedin!" diyorum, yanlış savunma yaparsan (jab'a eğilmek gibi) neyin doğru olduğunu ekrana yazıyorum. Belden eğildiğini görürsem onu da ayrıca söylüyorum; dizden çökmek hem daha güvenli hem karşılığa daha hızlı geçiriyor. Tur sonunda savunma oranını, ortalama savunma tepki süreni ve karşılıkların doğruluğunu görüyorsun.
+Savunma tutarsa hemen kısa bir karşılık kombinasyonu söylüyorum, onu da puanlıyorum. Hiç savunma yapmazsan "Yedin!" diyorum, yanlış savunma yaparsan (jab'a eğilmek gibi) neyin doğru olduğunu ekrana yazıyorum. Belden eğildiğini görürsem onu da ayrıca söylüyorum; dizden çökmek hem daha güvenli hem karşılığa daha hızlı geçiriyor. Raund sonunda savunma oranını, ortalama savunma tepki süreni ve karşılıkların doğruluğunu görüyorsun.
 
 **Hızlı refleks.** Tek tek vuruş komutları ve habersiz saldırılar karışık, kısa ve düzensiz aralarla geliyor. Saldırılar burada biraz daha hızlı. Amaç düşünmeden tepki vermek.
+
+**Kum torbası.** Kamera yok, sadece ses. Torbanın başına geçiyorsun, ben kombinasyon söylüyorum: "Sol sağ düz", "Sol sağ düz, sol kroşe", "Sağ sağ düz, sol low kick". Kombinasyon uzadıkça bekleme de uzuyor. Arada 30-50 saniyede bir "Seri kroşe!" gibi 10 saniyelik hızlı seriler geliyor. Raund aralarında torba çalışmasına dair tek cümlelik bir hatırlatma söylüyorum. Kamera olmadığı için vuruşları ölçmüyorum; tekniğe bakmamı istiyorsan aynı kombinasyonları Kombinasyon modunda kameraya at.
+
+**Rakipli shadow.** Kamerayla izliyorum ve hayali bir rakibi ben oynuyorum. Komutların aşağı yukarı yarısı rakibin saldırısı, yarısı senin atman gereken kombinasyon. Saldırıyı "Sağ düz geldi", "Sol kroşe geldi" diye söylüyorum ve ekranda kırmızı yazıyorum; "geldi" yoksa sıra sende. Seviye 2'den sonra "Sol low sağ high kick geldi" gibi seriler de geliyor; serideki her saldırıya ayrı savunma bekliyorum. High kick'e kapanmak ya da eğilmek, middle kick'e kapanmak ya da bacağı kaldırmak sayılıyor. Savunma tutarsa karşılık istiyorum. Raund sonunda o raundu 10 puan sistemiyle puanlıyorum: doğru attığın her vuruş ve tuttuğun her savunma sana 1 puan, yediğin her saldırı rakibe 2 puan, geç kalan her savunma rakibe 1 puan yazılıyor. "Raundu kazandın, 10-9" gibi söylüyorum, maç sonunda da maçın sonucunu ve raund raund tabloyu gösteriyorum. Bu bir oyun hakemliği: rakip gerçek değil, puan da sadece tanıyıcının gördükleriyle hesaplanıyor.
+
+Bütün modlarda raund sayısı (1, 3, 5) ve raund süresi seçilebiliyor. Raund aralarında seviyeye göre dinlenme var; dinlenmede bir önceki raundla ilgili kısa bir not söylüyorum, 10 saniye kala uyarıyorum. Komutları "Sol / sağ düz" ya da "Jab / kros" diye söyletmek ayarlardan seçiliyor.
+
+## Program
+
+Ana ekranda haftada 3, 4 ya da 5 gün için bir program kurulabiliyor. Hafta kombinasyon, kum torbası, savunma ve shadow günlerinden oluşuyor; iki haftada bir raund sayısı artıyor. "Bugünün antrenmanı" sıradaki seansı başlatıyor, biten seanslar o haftanın kutucuklarında işaretleniyor.
+
+Koç geçmiş seanslarına göre ayarlanıyor. Son seanslarda zayıf kalan bir hareket ya da savunamadığın bir saldırı varsa, onu içeren kombinasyonlar ve saldırılar üç kat daha sık geliyor ve program kartında "Odak" diye yazıyor. Aynı seviyedeki son üç kameralı seans iyi giderse seviye atlamanı, kötü giderse düşürmeni öneriyor; kum torbası seansları buna sayılmıyor. Hepsi telefonda, `localStorage` içinde duruyor; sunucu yok.
+
+## Savunmayı nasıl tanıyorum
 
 Savunmayı şöyle tanıyorum: kafanın yere basan ayağa göre ne kadar alçaldığına (eğilme), kalçaya göre ne kadar yana kaydığına (kayma) ve iki bileğin burun hizasına kalkıp kalkmadığına (kapanma) bakıyorum. Low kick kontrolü için ayrı bir şey yok, bacağın yerden kalkması yetiyor. Yumruk atarken de kafa oynadığı için, ilk başta bir vuruşla üst üste binen her savunma hareketini atıyordum. Bunu eklemeden önce yumruk videolarında savunma tanıyıcı sürekli yanlış alarm veriyordu; bir videoda 930 yumruğa karşı 707 sahte savunma çıktı. Filtreden sonra 6-12 dakikalık dört yumruk videosunda sahte savunma sayısı video başına 8 ile 60 arasına indi. Ama gerçek kayma videosunda bu filtrenin doğru savunmaları da sildiğini gördüm (aşağıda anlatıyorum), o yüzden şimdi daha yumuşak: üst üste binen bir vuruş savunmayı ancak kafa az oynadıysa, kol sert bir yumruk kadar açıldıysa ya da bacak low kick'ten yükseğe kalktıysa siliyor. Bir de kafa yüksekliğini önce iki ayağın ortasından ölçüyordum; low kick atarken kalkan ayak ortalamayı aşağı çektiği için tekme eğilme gibi görünüyordu. Artık yere basan, yani alttaki ayaktan ölçüyorum.
 
 Dosyalar:
 
-- `index.html`, `app.js`: arayüz, kamera, ses, tur akışı.
+- `index.html`, `app.js`: arayüz, kamera, ses, raund akışı.
 - `analyzer.js`: hareket tanıma ve puanlama. Tarayıcıya bağlı değil, Node ile test ediliyor.
-- `test/`: sentetik iskeletlerle testler. Çalıştırmak için `node --test test/analyzer.test.mjs`.
+- `coach.js`: program, zayıf nokta seçimi, raund hakemliği, kum torbası kombinasyonları. O da saf fonksiyonlardan oluşuyor.
+- `test/`: sentetik iskeletlerle ve koç fonksiyonlarıyla testler. Çalıştırmak için `node --test test/`.
 - `manifest.webmanifest`, ikonlar: ana ekrana ekleme için.
 
 ## Telefonda nasıl çalışır
@@ -120,6 +135,10 @@ Sonraki adımda YouTube'dan, hocaların aynı hareketi önce doğru sonra yanlı
 **Gard düşmesi.** Var olan kontrol kroşe videosundaki gard düşmesini yakaladı: o bölümdeki 12 yumruğun 5'inde boştaki el düşüktü, doğru kroşe bölümlerinde aşağı yukarı 10 yumrukta 1. Diğer videodaki gard düşmesini ise kaçırdı (9 yumrukta 1). Aynı kontrol tekmelerde de çalışıyor ama orada gürültülü; roundhouse'ta kolu bilerek aşağı savurmak tekniğin parçası, doğru tekmelerde bile el sık sık aşağıda görünüyor.
 
 Dirseğin açılması, çene kalkması, pivot yapmamak gibi diğer hataların her birinden bir iki örnek var. Bunlarla bir kural kurmak ezber olurdu, o yüzden şimdilik dokunmadım.
+
+## Bulutta eğitim neden yok
+
+Bulutta sürekli kendini eğiten bir model kurmadım. Yukarıdaki "eğitim" aslında videolarla eşik ayarlamaktı, gerçek bir model eğitimi değil. Bunu buluta taşımanın da pratik bir engeli var: YouTube, bulut sunucularının IP adreslerinden video indirmeyi engelliyor, yani videoları orada otomatik çekip işlemek çalışmıyor. Kişiye göre ayarlanma bu yüzden telefonda, geçmiş seanslara bakarak yapılıyor (Program bölümünde anlattım).
 
 ## Sonra yapılabilecekler
 

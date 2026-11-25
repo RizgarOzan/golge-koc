@@ -33,6 +33,7 @@
   #fps { color: var(--muted); font-size: 12px; }
   #cmd { top: 22%; text-align: center; font-size: clamp(28px, 9vw, 56px); font-weight: 800; letter-spacing: .01em;
     text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  #cmd.attack { color: #ff5a4f; }
   #result { bottom: calc(96px + env(safe-area-inset-bottom)); text-align: center; font-size: 18px; font-weight: 600; text-shadow: 0 1px 8px rgba(0,0,0,.9); }
   #result .ok { color: var(--ok); } #result .bad { color: var(--bad); } #result .warn { color: var(--warn); }
   #banner { top: 50%; transform: translateY(-50%); text-align: center; }
@@ -49,7 +50,7 @@
   .sub { color: var(--muted); margin: 0 0 20px; }
   .field { margin-bottom: 18px; }
   .field > label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
-  .seg { display: flex; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 3px; }
+  .seg { display: flex; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 3px; }
   .seg button { flex: 1; border: 0; background: transparent; padding: 10px 4px; border-radius: 9px; font-weight: 600; color: var(--muted); }
   .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
   .primary { width: 100%; border: 0; border-radius: 14px; padding: 16px; font-size: 18px; font-weight: 800; background: var(--accent); color: #fff; margin-top: 8px; }
@@ -64,7 +65,14 @@
   .card .v { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
   .card .d { font-size: 13px; color: var(--muted); }
   .advice { padding-left: 20px; margin: 0; } .advice li { margin-bottom: 10px; }
-  .good { color: var(--ok); }
+  .good { color: var(--ok); } .warn { color: var(--warn); }
+  .prog { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 20px; }
+  .prog .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .prog p { margin: 8px 0 0; } .prog .d { color: var(--muted); font-size: 14px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .pill { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 13px; color: var(--muted); }
+  .pill.done { border-color: var(--ok); color: var(--ok); }
+  .link { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 8px 0 0; font-size: 13px; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
   td { padding: 7px 0; border-bottom: 1px solid var(--line); } td:last-child { text-align: right; }
   [hidden] { display: none !important; }
@@ -86,9 +94,25 @@
     <h1>Gölge <b>Koç</b></h1>
     <p class="sub">Kombinasyonu söylerim, kamerayla izlerim, sonunda ne düzelteceğini söylerim.</p>
 
+    <div class="prog" id="prog">
+      <div id="progNew">
+        <div class="k">Program</div>
+        <p class="d">Haftada kaç gün çalışacağını seç, sana haftalık plan çıkarayım. Kombinasyon, kum torbası ve rakipli shadow sırayla gelir, iki haftada bir raund eklerim.</p>
+        <div class="field" style="margin:12px 0 0"><div class="seg" data-key="days">
+          <button data-v="3">Haftada 3</button><button data-v="4">Haftada 4</button><button data-v="5">Haftada 5</button>
+        </div></div>
+        <button class="secondary" id="progStart">Program kur (seçili seviyeyle)</button>
+      </div>
+      <div id="progOn" hidden>
+        <div id="progInfo"></div>
+        <button class="primary" id="today">Bugünün antrenmanı</button>
+        <button class="link" id="progReset">Programı sıfırla</button>
+      </div>
+    </div>
+
     <div class="field"><label>Mod</label>
       <div class="seg" data-key="mode">
-        <button data-v="session">Kombinasyon</button><button data-v="fight">Savaş</button><button data-v="fast">Hızlı refleks</button>
+        <button data-v="session">Kombinasyon</button><button data-v="fight">Savunma</button><button data-v="fast">Hızlı refleks</button><button data-v="bag">Kum torbası</button><button data-v="shadow">Rakipli shadow</button>
       </div></div>
     <div class="field"><label>Duruş</label>
       <div class="seg" data-key="stance">
@@ -98,7 +122,15 @@
       <div class="seg" data-key="level">
         <button data-v="1">Başlangıç</button><button data-v="2">Orta</button><button data-v="3">İleri</button>
       </div></div>
-    <div class="field"><label>Süre</label>
+    <div class="field"><label>Komutlar</label>
+      <div class="seg" data-key="names">
+        <button data-v="lr">Sol / sağ düz</button><button data-v="std">Jab / kros</button>
+      </div></div>
+    <div class="field"><label>Raund</label>
+      <div class="seg" data-key="rounds">
+        <button data-v="1">1</button><button data-v="3">3</button><button data-v="5">5</button>
+      </div></div>
+    <div class="field"><label>Raund süresi</label>
       <div class="seg" data-key="minutes">
         <button data-v="1">1 dk</button><button data-v="2">2 dk</button><button data-v="3">3 dk</button><button data-v="5">5 dk</button>
       </div></div>
@@ -112,7 +144,9 @@
       <li>Kameraya tam karşıdan değil, hafif çapraz dur. Düz yumrukları böyle daha iyi görürüm.</li>
       <li>Işık önden gelsin, arkanda pencere olmasın. Bol kıyafet ölçümü bozar.</li>
       <li>iPhone'da sessiz modu kapat, yoksa komutları duymazsın.</li>
-      <li>Savaş modunda ben saldırırım: jab ya da kros gelirse kay ya da kapan, kroşe gelirse dizlerinden çök, low kick gelirse bacağını kaldırıp kontrol et. Savunma tutarsa hemen karşılık kombinasyonunu söylerim.</li>
+      <li>Kum torbası modunda kamera açılmaz. Telefonu cebine koy ya da kenara bırak, ben "sol sağ düz, sol kroşe" diye söylerim, sen torbaya atarsın. Arada on saniyelik seri patlamalar gelir.</li>
+      <li>Rakipli shadow modunda karşında hayali bir rakip var. "Sağ düz geldi", "sol low sağ high kick" diye saldırırım, sen savunup karşılık verirsin, arada sıra sende olur. Her raundun sonunda hakem gibi puan veririm: kazandın mı kaybettin mi söylerim.</li>
+      <li>Savunma modunda ben saldırırım: jab ya da kros gelirse kay ya da kapan, kroşe gelirse dizlerinden çök, low kick gelirse bacağını kaldırıp kontrol et. Savunma tutarsa hemen karşılık kombinasyonunu söylerim.</li>
       <li>Hızlı refleks modunda tek vuruşlar ve habersiz saldırılar karışık, kısa aralarla gelir.</li>
     </ul>
   </div>
@@ -126,7 +160,8 @@
     <h2>Düzeltmen gerekenler</h2>
     <ol class="advice" id="advice"></ol>
     <div id="strengths"></div>
-    <h2>Hareket bazında</h2>
+    <div id="roundsBox"></div>
+    <h2 id="byMoveH">Hareket bazında</h2>
     <table id="byMove"></table>
     <button class="primary" id="again">Tekrar</button>
     <button class="secondary" id="home">Ana ekran</button>
