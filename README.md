@@ -2,6 +2,8 @@
 
 Telefonun kamerasıyla seni izleyen, sesli kombinasyon söyleyen ve ne yaptığına bakıp tavsiye veren bir kickboks antrenörü. Uygulama mağazasına gerek yok: tarayıcıda açılan bir web uygulaması (PWA), istersen ana ekrana ekleyip uygulama gibi kullanırsın.
 
+Hemen denemek için telefonda şu adresi aç: **https://rizgarozan.github.io/golge-koc/**
+
 ## Ne yapıyor
 
 - Seviyeye göre (1-3) kombinasyon seçip Türkçe sesle söylüyor: "cab, kros, sağ low kick" gibi.
