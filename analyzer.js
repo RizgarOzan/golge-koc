@@ -37,9 +37,12 @@ export const CFG = {
                         // (0.25 fired on stance shifts: 18 of 81 slips in a slip drill fell outside any defence)
   defEnd: 0.6,          // a duck/slip ends when it is back under this share of its start threshold
   block: -0.05,         // both wrists at least this high relative to the nose (torso units) = cover/block
-  waistBend: 0.8,       // radians of extra forward lean in a duck: bending at the waist instead of the knees.
-                        // Correct knee ducks in a coaching video leaned 0.46-0.75, so the line sits above that.
-                        // A real waist bend leaned only 0.61-0.65, inside that range: lean alone can't catch it.
+  waistBend: 0.5,       // radians of extra forward lean in a duck: bending at the waist instead of the knees.
+                        // Correct knee ducks lean as far as 0.46-0.76 too, so lean alone can't catch it; the knees decide:
+  waistKnee: 0.3,       // ...the knees bent less than this (radians) during the duck,
+  waistKneeMin: 2.1,    // ...or never bent past this angle (radians, 3.14 = straight leg).
+                        // Waist-bend demos: knee bend 0.06/0.41/0.33, smallest angle 1.85/2.37/2.43.
+                        // Correct knee ducks: bend 0.26-1.27, smallest angle 1.37-2.0.
   defKeepMag: 2,        // a defence that overlaps a strike survives only if the head went this many thresholds far
   defArmMax: 1.0,       // ...and no overlapping arm event was at least this strong (1 = a typical punch)
   telegraph: 0.15,      // the punching hand first went this far backward (torso units) before going out
@@ -64,6 +67,7 @@ export function frameFeatures(world) {
   const rel = (i) => mul(sub(p(i), hip), 1 / T);
   const h = (i) => dot(rel(i), up);
   const straight = (a, b, c) => dist(p(a), p(c)) / (dist(p(a), p(b)) + dist(p(b), p(c)) || 1);
+  const angle = (a, b, c) => { const u = sub(p(a), p(b)), w = sub(p(c), p(b)); return Math.acos(Math.max(-1, Math.min(1, dot(u, w) / (len(u) * len(w) || 1)))); };
   return {
     up,
     // Wrists are taken from the shoulder line so bobbing and leaning at the waist don't look like punches.
@@ -84,6 +88,7 @@ export function frameFeatures(world) {
       h: Math.max(p(LM.lAn)[1], p(LM.rAn)[1]) - p(LM.nose)[1], // from the standing (lower) foot: a kick lifts the other
       x: p(LM.nose)[0] - hip[0], z: p(LM.nose)[2] - hip[2],
       tilt: Math.acos(Math.max(-1, Math.min(1, -up[1]))),
+      knee: (angle(LM.lHip, LM.lKn, LM.lAn) + angle(LM.rHip, LM.rKn, LM.rAn)) / 2, // mean knee angle, radians
     },
   };
 }
@@ -221,13 +226,13 @@ export function createDetector() {
     const hd = f.head;
     if (!headRest) { headRest = { ...hd, T: f.T }; return; }
     const a = def ? 0 : still ? (restFrames < 15 ? 0.3 : 0.05) : CFG.restFollow;
-    for (const k of ['h', 'x', 'z', 'tilt', 'T']) headRest[k] += ((k === 'T' ? f.T : hd[k]) - headRest[k]) * a;
+    for (const k of ['h', 'x', 'z', 'tilt', 'knee', 'T']) headRest[k] += ((k === 'T' ? f.T : hd[k]) - headRest[k]) * a;
     const drop = (headRest.h - hd.h) / headRest.T;
     const shift = Math.hypot(hd.x - headRest.x, hd.z - headRest.z) / headRest.T;
     const cover = covering(f, 'L') && covering(f, 'R');
     const type = drop > CFG.duck ? 'duck' : shift > CFG.slip ? 'slip' : cover ? 'block' : null;
     if (!def) {
-      if (type) def = { kind: 'def', type, start: t, waistBend: false, mag: 0 };
+      if (type) def = { kind: 'def', type, start: t, waistBend: false, mag: 0, lean: 0, knee: Infinity };
       return;
     }
     // How far past its threshold the head went, so a big defence can win over a small arm twitch.
@@ -235,10 +240,13 @@ export function createDetector() {
     // Once a move started, the strongest one seen wins: a block that turns into a duck is a duck.
     const rank = { block: 1, slip: 2, duck: 3 };
     if (type && rank[type] > rank[def.type]) def.type = type;
-    if (def.type === 'duck' && hd.tilt - headRest.tilt > CFG.waistBend) def.waistBend = true;
+    if (def.type === 'duck') { def.lean = Math.max(def.lean, hd.tilt - headRest.tilt); def.knee = Math.min(def.knee, hd.knee); }
     const over = def.type === 'duck' ? drop > CFG.duck * CFG.defEnd
       : def.type === 'slip' ? shift > CFG.slip * CFG.defEnd : cover;
     if (over && t - def.start <= CFG.maxEvent) return;
+    // The rest stance stands still during a defence, so headRest.knee is the knee angle before the duck.
+    def.waistBend = def.type === 'duck' && def.lean > CFG.waistBend
+      && (headRest.knee - def.knee < CFG.waistKnee || def.knee > CFG.waistKneeMin);
     defPending.push({ ...def, end: t });
     def = null;
   }
