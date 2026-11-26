@@ -45,6 +45,8 @@ export const CFG = {
                         // Correct knee ducks: bend 0.26-1.27, smallest angle 1.37-2.0.
   defKeepMag: 2,        // a defence that overlaps a strike survives only if the head went this many thresholds far
   defArmMax: 1.0,       // ...and no overlapping arm event was at least this strong (1 = a typical punch)
+  duckShort: 0.4,       // a duck shorter than this (seconds)...
+  duckArmWin: 0.25,     // ...followed by a strike starting within this many seconds is the head dipping into a punch
   telegraph: 0.15,      // the punching hand first went this far backward (torso units) before going out
 };
 
@@ -207,11 +209,15 @@ export function createDetector() {
     // the defence when the head move was small, an arm went out hard, or a kick left the ground.
     const defs = [];
     if (!Object.keys(open).length) {
+      const wait = [];
       for (const d of defPending.splice(0)) {
-        const over = strikes.filter((e) => e.start < d.end + 0.15 && e.end > d.start - 0.15);
+        const w = d.type === 'duck' && d.end - d.start < CFG.duckShort ? CFG.duckArmWin : 0;
+        if (w && d.end > t - w) { wait.push(d); continue; }
+        const over = strikes.filter((e) => e.start < d.end + Math.max(w, 0.15) && e.end > d.start - 0.15);
         const real = over.some((e) => (e.kind === 'arm' && e.strength >= CFG.defArmMax) || (e.kind === 'leg' && e.type !== 'low'));
         if (!over.length || (d.mag >= CFG.defKeepMag && !real)) defs.push(d);
       }
+      defPending.push(...wait);
       strikes = strikes.filter((e) => e.end > t - 2);
     }
     return { frame: f, events: out, defs, still };
