@@ -125,13 +125,26 @@ Ayar videosunda %46'dan %48'e, görmediği videoda %65'ten %68'e, form videolar�
 
 Kroşe ile aparkatı ayırmak için hem eşik taradım hem de kol özelliklerinden küçük bir sınıflandırıcı eğitip her seferinde bir videoyu dışarıda bırakarak denedim. İkisi de bugünkü basit kuralı geçemedi. Kroşe örneklerinin çoğu tek videodan geliyor. Önden çekilmiş, kroşe ve aparkatın ayrı etiketlendiği daha fazla video olmadan bu ayrımın düzeleceğini sanmıyorum.
 
+**Dördüncü tur: kroşe ve aparkat için yeni videolar (26 Kasım).** İki video daha buldum. Biri önden çekilmiş, vuruşların adı ekranda yazan bir boks antrenmanı. Diğeri 1'den 6'ya kadar yumrukları tek tek, yavaşça gösteren bir anlatım videosu. İkisini de bölümlere ayırıp her bölümde hangi kolun hangi yumruğu attığını etiketledim, böylece dördüncü bir kontrol seti oldu.
+
+İlk bakışta tablo kötüydü. Bu iki videoda tanıyıcı kroşe ile aparkatı neredeyse yazı tura ile ayırıyordu: 91 bükük kol yumruğundan 49'u doğru. Dirsek yüksekliğine baktım, kroşeler -0,41 ile -0,02 arasında, aparkatlar -0,57 ile -0,08 arasında dağılıyordu. Bu eşikle çözülecek bir şey değildi; dirsek yüksekliği eşiği (`hookElbow`) ve kolun düzlük eşiği (`straight`) için yeni değerler de yine en az bir seti bozdu.
+
+Bileğin nasıl hareket ettiğine bakınca fark çıktı. Kroşede el daha çok yana savruluyor, aparkatta yukarı çıkıyor. Yumruktan hemen önceki 0,35 saniyeden yumruk bitene kadar bileğin dikeyde ne kadar yol aldığını yatayda aldığı yola bölüyorum. Dirsek kuralı "kroşe" dediğinde bu oran 1,25'i geçiyorsa yumruğu aparkat sayıyorum. 1,15 ile 1,4 arasındaki her değer dört setin hiçbirini kötüleştirmedi, ortasına yakın bir değer seçtim:
+
+- Ayar videosu aynı kaldı (%48, 365/764).
+- Görmediği videoda %68'den %70'e çıktı (128'den 132 doğruya). Kroşe/aparkat ayrımı orada 23'te 16'dan 20'ye çıktı.
+- Form videoları aynı kaldı (%33, 120/363).
+- Yeni iki videoda doğru sayısı 445'ten 468'e çıktı, kroşe/aparkat ayrımı 91'de 49'dan 72'ye.
+
+Bedeli şu: yeni videolardaki 16 gerçek kroşenin 12'si yerine 10'u doğru çıkıyor. Kazanç neredeyse tamamen aparkat tarafında (75'te 37'den 62'ye). Kroşe örneği az, iki kayıp tesadüf de olabilir; daha çok kroşe videosuyla bakmam lazım. Eşiği de bu dört seti görerek seçtim, yani tamamen yeni bir videoda nasıl davranacağını henüz bilmiyorum. Bir de kural yalnız "kroşe"yi aparkata çeviriyor, tersini yapmıyor; yanlışlıkla aparkat denen kroşeler hâlâ öyle kalıyor.
+
 Denediğim ama geri aldığım şeyler:
 
 - Yumruğun gövdeye göre yönüne bakarak kroşe, aparkat ve düz yumruğu ayırmak. Önden çekimde üç hareketin değerleri neredeyse tamamen üst üste biniyor, işe yaramadı.
 - Dizi low kick'ten ayırmak için "diz kalça hizasına çıkmalı" kuralı. Ayar videosunda low kick'leri düzeltti ama görmediği videoda dizleri %79'dan %11'e düşürdü. Yani o videoya ezber yapmıştı. Hareket boyunca bacağın en düz hali de iki hareketi ayırmadı.
 - Çok uzun süren kol hareketlerini atmak. Gerçek hızlı yumrukları da sildi.
 
-Kısacası tekme, diz ve düz yumrukta işe yarar durumda. Önden çekimde kroşe ile aparkatı, bazen de diz ile low kick'i ayıramıyor; bunun için kişiye göre kalibrasyon ya da gerçek kayıtlarla eğitilmiş küçük bir sınıflandırıcı lazım. Çok dönerek, kayarak çalışırken kroşe ve aparkat ayrımına güvenme. Telefonla gerçek ortamda henüz denenmedi; ilk denemede eşiklerin biraz ayar isteyeceğini düşünüyorum.
+Kısacası tekme, diz ve düz yumrukta işe yarar durumda. Önden çekimde kroşe ile aparkatı hâlâ tam ayıramıyor (bilek yönüne bakan kuraldan sonra yeni videolarda 91'de 72 doğru), bazen de diz ile low kick'i karıştırıyor; bunun için kişiye göre kalibrasyon ya da gerçek kayıtlarla eğitilmiş küçük bir sınıflandırıcı lazım. Çok dönerek, kayarak çalışırken kroşe ve aparkat ayrımına güvenme. Telefonla gerçek ortamda henüz denenmedi; ilk denemede eşiklerin biraz ayar isteyeceğini düşünüyorum.
 
 ## Doğru ve hatalı form videoları
 
@@ -142,6 +155,8 @@ Sonraki adımda YouTube'dan, hocaların aynı hareketi önce doğru sonra yanlı
 Sonra kayma eşiğini, yani kafanın kalçaların üstünden yana ne kadar kayınca kayma sayılacağını, 0,25'ten 0,3'e çektim. O sırada (yukarıdaki bacak ayarlarından sonra) kayma videosunda 81 savunma çıkıyordu, 18'i hiçbir etiketli bölüme düşmüyordu. Yeni eşikle 56 savunma çıkıyor ve bölüm dışında kalan 3. Kayma, roll ve eğilme bölümlerinde doğru türde yakalananların sayısı 36'da kaldı; kaybolanlar hep yanlış türdeydi. Dört yumruk videosunda sahte savunma dakikada ortalama 8,0'dan 6,9'a düştü. Vuruş isabetine etkisi yok.
 
 **Belden eğilme.** Videodaki doğru, dizden eğilmelerin hepsini "belden" diye işaretliyordu. Gövdenin öne eğimi doğru eğilmelerde 0,46 ile 0,75 radyan arasında çıktı, eşik ise 0,45'ti. Eşiği 0,8'e çektim. Elimde gerçekten belden eğilen bir örnek olmadığı için yeni eşiğin hatalıyı ne kadar yakaladığını bilmiyorum.
+
+Sonra hocanın önce yanlış (belden), sonra doğru (dizden) eğildiği bir video buldum. Belden eğilmede gövde normal duruşa göre 0,61-0,65 radyan fazladan öne eğiliyor; 0,8 eşiği bunu kaçırıyor. Eşiği indirmek de çözüm değil: aynı videodaki doğru eğilme 0,40-0,44. Eğilme dersinde bu sefer tanıyıcının yakaladığı bütün eğilmeleri tek tek ölçtüm, doğru eğilmeler 0,25 ile 0,75 arasında çıktı (yukarıdaki 0,46 alt sınırı sığ eğilmeleri saymıyordu). Yanlış örnek tam doğru eğilmelerin arasına düşüyor, o yüzden eşiği 0,8'de bıraktım. Asıl fark dizlerde görünüyor: belden eğilirken dizler neredeyse düz kalıyor (en küçük diz açısı 2,37 radyan), eğimi 0,5'i geçen doğru eğilmelerde ise diz 2,0 radyanın altına kadar bükülüyor. Yine de elimde tek bir yanlış örnek var. Bunu kurala çevirmek için en az birkaç belden eğilme örneği daha lazım.
 
 **Telegraf.** En çok örneği olan hata buydu (9 bölüm). Yumruktan hemen önce elin yumruğun gideceği yönün tersine ne kadar geri gittiğini ölçen bir değer ekledim. İki videoyla ayarladım, üçüncüyü ayırdım. Ayar videolarında telegraflı yumrukların %29'u geri çekiliyor, doğru yumrukların %11'i. Ayırdığım videoda bu oran %40'a %17. Tek yumrukta güvenilir değil ama bir seans boyunca birikince işe yarıyor. Seansta en az 10 yumruk varsa ve %30'undan fazlası geri çekildiyse "yumruktan önce elini geri çekiyorsun" diyorum. Bu eşik bilerek yüksek: temiz yumruk atan birine boşuna uyarı vermesin diye. Bedeli, hafif telegraf yapanların aşağı yukarı yarısını kaçırması.
 

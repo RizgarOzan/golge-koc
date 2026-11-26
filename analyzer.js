@@ -23,6 +23,8 @@ export const CFG = {
   maxEvent: 1.3,        // seconds; an event is force-closed after this
   straight: 0.72,       // arm straightness at peak: above = jab/cross
   hookElbow: -0.3,      // elbow height minus shoulder height: above = hook, below = uppercut
+  hookRise: 1.25,       // a "hook" whose wrist travelled up/down more than this many times its sideways travel
+                        // (from just before the punch to its end) is an uppercut. 1.15-1.4 hurt no labelled set.
   kneeBend: 0.72,       // leg straightness at peak: below (with knee high) = knee strike
   highKick: 0.55,       // ankle height at peak: above = high kick
   midKick: -0.35,       // above = middle kick, below = low kick
@@ -37,6 +39,7 @@ export const CFG = {
   block: -0.05,         // both wrists at least this high relative to the nose (torso units) = cover/block
   waistBend: 0.8,       // radians of extra forward lean in a duck: bending at the waist instead of the knees.
                         // Correct knee ducks in a coaching video leaned 0.46-0.75, so the line sits above that.
+                        // A real waist bend leaned only 0.61-0.65, inside that range: lean alone can't catch it.
   defKeepMag: 2,        // a defence that overlaps a strike survives only if the head went this many thresholds far
   defArmMax: 1.0,       // ...and no overlapping arm event was at least this strong (1 = a typical punch)
   telegraph: 0.15,      // the punching hand first went this far backward (torso units) before going out
@@ -249,6 +252,12 @@ function finish(ev) {
   // A bent arm whose hand ends at the forehead is covering up, not punching.
   if (ev.kind === 'arm' && covering(f, ev.limb) && f.armS[ev.limb] < CFG.straight) return null;
   const c =ev.kind === 'arm' ? classifyArm(ev.limb, f) : classifyLeg(ev.limb, f);
+  if (c.type === 'hook') {
+    // A hook swings sideways, an uppercut rises. Elbow height alone mixes them up.
+    const span = (k) => { const v = [...ev.pre.map((p) => p[k]), ...ev.frames.map((fr) => fr.pos[ev.limb][k])]; return Math.max(...v) - Math.min(...v); };
+    c.rise = span(1) / (span(0) || 1e-3);
+    if (c.rise > CFG.hookRise) c.type = 'upper';
+  }
   // Guard during the strike: the other hand for punches, the hand opposite the kicking leg for kicks.
   const watch = ev.limb === 'L' ? 'R' : 'L';
   const upShare = ev.frames.filter((fr) => guardUp(fr, watch)).length / ev.frames.length;
