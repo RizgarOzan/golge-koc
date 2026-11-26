@@ -116,6 +116,15 @@ Yolda öğrendiklerim:
 - Bir de şunu düzelttim: tekme atarken savrulan kol bazen tekmeden "güçlü" görünüp tekmeyi siliyordu. Artık bacak hareketi varsa önce bacaklar kendi aralarında karşılaştırılıyor.
 - Görmediği videoda %60'tan %65'e çıktı. Cab-kros, düz yumruk ve diz turları %80-100 arasında. Aparkat ve squat sonrası roundhouse turları zayıf (%0-30).
 
+**Üçüncü tur: eşik taraması (26 Kasım).** Bu sefer form videolarını da etiketli bölümlere çevirip üçüncü bir kontrol seti yaptım. Bir eşiği ancak üç sette de işleri bozmuyorsa tuttum. İki değişiklik kaldı:
+
+- Tekme ya da dizin başlaması için bir bacağın diğerinden ne kadar yukarı kalkması gerektiğini 0,5'ten 0,7'ye çıkardım. Yumruk çalışmalarındaki zıplamalar ve duruş değiştirmeler zayıf tekme gibi okunuyordu.
+- Yumruk sayılması için bileğin çıkması gereken en düşük yüksekliği 0,6'dan 0,55'e indirdim. Önden çekimde biraz alçak giden gerçek yumruklar eleniyordu.
+
+Ayar videosunda %46'dan %48'e, görmediği videoda %65'ten %68'e, form videolarında %32'den %33'e çıktı. Küçük bir kazanç ama üç sette de aynı yönde.
+
+Kroşe ile aparkatı ayırmak için hem eşik taradım hem de kol özelliklerinden küçük bir sınıflandırıcı eğitip her seferinde bir videoyu dışarıda bırakarak denedim. İkisi de bugünkü basit kuralı geçemedi. Kroşe örneklerinin çoğu tek videodan geliyor. Önden çekilmiş, kroşe ve aparkatın ayrı etiketlendiği daha fazla video olmadan bu ayrımın düzeleceğini sanmıyorum.
+
 Denediğim ama geri aldığım şeyler:
 
 - Yumruğun gövdeye göre yönüne bakarak kroşe, aparkat ve düz yumruğu ayırmak. Önden çekimde üç hareketin değerleri neredeyse tamamen üst üste biniyor, işe yaramadı.
@@ -129,6 +138,8 @@ Kısacası tekme, diz ve düz yumrukta işe yarar durumda. Önden çekimde kroş
 Sonraki adımda YouTube'dan, hocaların aynı hareketi önce doğru sonra yanlış gösterdiği yedi video daha buldum: kros hataları, telegraf (vuruşu belli etmek), kroşe hataları, roundhouse ve low kick hataları, bir de kayma, roll ve eğilme dersi. Her videoda hangi saniyelerde hangi hareketin doğru ya da hangi hatayla yapıldığını etiketledim. Toplam 30 doğru, 25 hatalı bölüm çıktı. Pozlar ve etiketler `data/form/` içinde. Sayılar küçük, o yüzden aşağıdakileri "işaret" diye oku, kesin ölçüm diye değil.
 
 **Savunma.** Kayma ve eğilme videosu eski filtreyi çürüttü. Kafa yana kayarken ya da eğilirken kollar ve bacaklar da biraz oynuyor, tanıyıcı bunları kısa yumruk ve low kick sanıyor, filtre de savunmayı siliyordu. Kayma bölümlerinde tek bir kayma bile kalmamıştı. Filtreyi yukarıda anlattığım gibi yumuşatınca aynı videoda 77 savunma çıktı, 60'ı etiketli bölümlerin içinde. İkinci kayma bölümünde 4 kayma ve 5 eğilme, roll ve eğilme bölümlerinde ise çoğunlukla eğilme çıkıyor. İlk kayma bölümünde hâlâ hiçbir şey çıkmıyor. Bedeli şu: aynı dört yumruk videosunda sahte savunma video başına 20 ile 118 arasına, yani dakikada 3 ile 12 arasına çıktı. Savaş modunda savunmaya sadece saldırı komutundan sonraki kısa pencerede bakıyorum ve o sırada normalde yumruk atılmıyor, o yüzden zararı sınırlı. Hızlı refleks modunda ise bir önceki tek vuruş komutunun hareketi pencereye taşarsa sahte bir savunma sayılabilir.
+
+Sonra kayma eşiğini, yani kafanın kalçaların üstünden yana ne kadar kayınca kayma sayılacağını, 0,25'ten 0,3'e çektim. O sırada (yukarıdaki bacak ayarlarından sonra) kayma videosunda 81 savunma çıkıyordu, 18'i hiçbir etiketli bölüme düşmüyordu. Yeni eşikle 56 savunma çıkıyor ve bölüm dışında kalan 3. Kayma, roll ve eğilme bölümlerinde doğru türde yakalananların sayısı 36'da kaldı; kaybolanlar hep yanlış türdeydi. Dört yumruk videosunda sahte savunma dakikada ortalama 8,0'dan 6,9'a düştü. Vuruş isabetine etkisi yok.
 
 **Belden eğilme.** Videodaki doğru, dizden eğilmelerin hepsini "belden" diye işaretliyordu. Gövdenin öne eğimi doğru eğilmelerde 0,46 ile 0,75 radyan arasında çıktı, eşik ise 0,45'ti. Eşiği 0,8'e çektim. Elimde gerçekten belden eğilen bir örnek olmadığı için yeni eşiğin hatalıyı ne kadar yakaladığını bilmiyorum.
 

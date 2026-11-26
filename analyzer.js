@@ -16,7 +16,8 @@ export const CFG = {
   stillSpeed: 1.2,      // torso/s: below this everything counts as "standing still"
   armStart: 0.32,       // wrist must leave its rest spot by this much to start a punch
   armEnd: 0.22,         // and come back under this to end it
-  legStart: 0.5,        // ankle or knee lifted this far above the other leg's one starts a kick/knee
+  legStart: 0.7,        // ankle or knee lifted this far above the other leg's one starts a kick/knee
+                        // (0.5 let hops and stance shifts in punch drills through as weak kicks)
   legEnd: 0.3,          // (relative to the standing leg, so bouncing and stance drift don't matter)
   restFollow: 0.02,     // per frame: how fast the arm rest spot follows a limb that is not striking
   maxEvent: 1.3,        // seconds; an event is force-closed after this
@@ -26,11 +27,12 @@ export const CFG = {
   highKick: 0.55,       // ankle height at peak: above = high kick
   midKick: -0.35,       // above = middle kick, below = low kick
   guardH: 0.75,         // wrist height at or above this = hand is up
-  punchMinH: 0.6,       // a punch peaks near shoulder height; a wrist that ends lower is just a dropped hand
+  punchMinH: 0.55,      // a punch peaks near shoulder height; a wrist that ends lower is just a dropped hand
   overlapKeep: 0.6,     // overlapping weaker events below this share of the winner are dropped
   // Defence. Head moves are measured against the resting stance, in units of the resting torso length.
   duck: 0.35,           // head drops this far (nose height above the ankles) = duck
-  slip: 0.25,           // head moves this far sideways from above the hips = slip
+  slip: 0.3,            // head moves this far sideways from above the hips = slip
+                        // (0.25 fired on stance shifts: 18 of 81 slips in a slip drill fell outside any defence)
   defEnd: 0.6,          // a duck/slip ends when it is back under this share of its start threshold
   block: -0.05,         // both wrists at least this high relative to the nose (torso units) = cover/block
   waistBend: 0.8,       // radians of extra forward lean in a duck: bending at the waist instead of the knees.
