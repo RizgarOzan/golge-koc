@@ -25,6 +25,8 @@ export const CFG = {
   hookElbow: -0.3,      // elbow height minus shoulder height: above = hook, below = uppercut
   hookRise: 1.25,       // a "hook" whose wrist travelled up/down more than this many times its sideways travel
                         // (from just before the punch to its end) is an uppercut. 1.15-1.4 hurt no labelled set.
+  sideView: 0.8,        // filmed from the side (see frameFeatures side) a hook swings toward the camera, so its
+                        // sideways travel is taken from depth too. A side-on bag video got 3 more rear hooks; 0.75-0.85 hurt no set.
   kneeBend: 0.72,       // leg straightness at peak: below (with knee high) = knee strike
   highKick: 0.55,       // ankle height at peak: above = high kick
   midKick: -0.35,       // above = middle kick, below = low kick
@@ -86,6 +88,8 @@ export function frameFeatures(world) {
     // Head in the camera's frame (y points down), in metres, for defence moves.
     // Heights along the torso axis don't work here: the torso itself tilts in a duck.
     T,
+    // 0 when the camera sees the shoulders square on, 1 when it sees the fighter from the side.
+    side: Math.abs(p(LM.rSh)[2] - p(LM.lSh)[2]) / (Math.hypot(p(LM.rSh)[0] - p(LM.lSh)[0], p(LM.rSh)[2] - p(LM.lSh)[2]) || 1),
     head: {
       h: Math.max(p(LM.lAn)[1], p(LM.rAn)[1]) - p(LM.nose)[1], // from the standing (lower) foot: a kick lifts the other
       x: p(LM.nose)[0] - hip[0], z: p(LM.nose)[2] - hip[2],
@@ -269,7 +273,8 @@ function finish(ev) {
   if (c.type === 'hook') {
     // A hook swings sideways, an uppercut rises. Elbow height alone mixes them up.
     const span = (k) => { const v = [...ev.pre.map((p) => p[k]), ...ev.frames.map((fr) => fr.pos[ev.limb][k])]; return Math.max(...v) - Math.min(...v); };
-    c.rise = span(1) / (span(0) || 1e-3);
+    const across = ev.frames[0].side > CFG.sideView ? Math.max(span(0), span(2)) : span(0);
+    c.rise = span(1) / (across || 1e-3);
     if (c.rise > CFG.hookRise) c.type = 'upper';
   }
   // Guard during the strike: the other hand for punches, the hand opposite the kicking leg for kicks.
